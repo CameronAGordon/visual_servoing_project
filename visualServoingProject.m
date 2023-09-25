@@ -1,24 +1,12 @@
 % Create a webcam object for your integrated webcam
 vid = webcam("Integrated Webcam");
 
+% Physical size of the squares on the checkerboard (in centimeters)
+squareSizeCM = 2.75;  % Each square is 2.75 cm by 2.75 cm
+
 % Create a figure for displaying the live video
 hFig = figure;
 set(hFig, 'Name', 'Live Pattern Detection', 'NumberTitle', 'off');
-
-% Load the PNG image as grayscale (if it's not already in grayscale)
-template_path = fullfile('Pattern Images', 'ARTag.png');
-template_gray = imread(template_path);
-
-% Check if the template image is not in grayscale
-if size(template_gray, 3) == 3
-    template_gray = rgb2gray(template_gray);
-end
-
-% Create a SURF object for the template
-templateSURF = detectSURFFeatures(template_gray);
-
-% Extract feature descriptors for the template
-[templateFeatures, templatePoints] = extractFeatures(template_gray, templateSURF);
 
 while ishandle(hFig)
     % Capture a frame from the webcam
@@ -30,40 +18,46 @@ while ishandle(hFig)
     % Convert the captured frame to grayscale
     frame_gray = rgb2gray(frame);
     
-    % Create a SURF object for the frame with custom threshold
-    customThreshold = 1000;  % Adjust this threshold value as needed
-    frameSURF = detectSURFFeatures(frame_gray, 'MetricThreshold', customThreshold);
-    
-    % Extract feature descriptors for the frame
-    [frameFeatures, framePoints] = extractFeatures(frame_gray, frameSURF);
-    
-    % Match features between the template and frame
-    indexPairs = matchFeatures(templateFeatures, frameFeatures);
+    % Detect checkerboard corners
+    [imagePoints, boardSize] = detectCheckerboardPoints(frame_gray, 'MinCornerMetric', 0.1);
     
     % Display the original frame
     imshow(frame);
     hold on;
     
-    % Plot the matched points on the frame
-    if ~isempty(indexPairs)
-        matchedTemplatePoints = templatePoints(indexPairs(:, 1));
-        matchedFramePoints = framePoints(indexPairs(:, 2));
-        plot(matchedFramePoints);
+    % Check if checkerboard corners were found
+    if ~isempty(imagePoints)
+        % Plot the detected checkerboard corners
+        plot(imagePoints(:, 1), imagePoints(:, 2), 'ro', 'MarkerSize', 5);
+        title('Detected Checkerboard Corners');
         
-        % Calculate the average position of matched points
-        avgX = mean(matchedFramePoints.Location(:, 1));
-        avgY = mean(matchedFramePoints.Location(:, 2));
+        % Calculate the size of the checkerboard in pixels
+        checkerboardWidthPixels = max(imagePoints(:, 1)) - min(imagePoints(:, 1));
+        checkerboardHeightPixels = max(imagePoints(:, 2)) - min(imagePoints(:, 2));
         
-        % Get the center of the image
-        [imageHeight, imageWidth, ~] = size(frame);
-        centerX = imageWidth / 2;
-        centerY = imageHeight / 2;
+        % Calculate the distance of the checkerboard from the camera (arbitrary unit)
+        % You can use the formula: distance = (known size / perceived size) * arbitrary scale
+        knownSize = squareSizeCM * boardSize(1);  % Total width of checkerboard in centimeters
+        perceivedSize = max(checkerboardWidthPixels, checkerboardHeightPixels);
+        arbitraryScale = 100;  % Arbitrary scale factor (adjust as needed)
+        distance = (knownSize / perceivedSize) * arbitraryScale;
+        
+        % Calculate the X and Y positions of the checkerboard center relative to the image center
+        centerX = size(frame, 2) / 2;
+        centerY = size(frame, 1) / 2;
+        avgX = mean(imagePoints(:, 1));
+        avgY = mean(imagePoints(:, 2));
+        deltaX = avgX - centerX;
+        deltaY = avgY - centerY;
         
         % Draw an arrow from the average of matched points to the center
         quiver(avgX, avgY, centerX - avgX, centerY - avgY, 0, 'r', 'LineWidth', 2);
         
-        legend('Matched Points', 'Arrow');
-        text(20, imageHeight - 20, sprintf('X: %.2f, Y: %.2f', avgX - centerX, avgY - centerY), 'Color', 'r', 'FontSize', 12);
+        % Display the estimated distance, X, and Y positions
+        text(20, 20, sprintf('Distance: %.2f arbitrary units', distance), 'Color', 'r', 'FontSize', 12);
+        text(20, 50, sprintf('X: %.2f pixels, Y: %.2f pixels', deltaX, deltaY), 'Color', 'r', 'FontSize', 12);
+    else
+        title('Checkerboard Not Detected');
     end
     
     hold off;
