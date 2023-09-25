@@ -6,7 +6,7 @@ hFig = figure;
 set(hFig, 'Name', 'Live Pattern Detection', 'NumberTitle', 'off');
 
 % Load the PNG image as grayscale (if it's not already in grayscale)
-template_path = fullfile('Pattern Images', 'ARTag.png');
+template_path = fullfile('Pattern Images', 'square.png');
 template_gray = imread(template_path);
 
 % Check if the template image is not in grayscale
