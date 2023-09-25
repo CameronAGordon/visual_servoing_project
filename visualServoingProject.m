@@ -7,7 +7,7 @@ squareSizeCM = 2.75;  % Each square is 2.75 cm by 2.75 cm
 % Create a figure for displaying the live video
 hFig = figure;
 set(hFig, 'Name', 'Live Pattern Detection', 'NumberTitle', 'off');
-
+tts('Hello');
 while ishandle(hFig)
     % Capture a frame from the webcam
     frame = snapshot(vid);
@@ -29,7 +29,7 @@ while ishandle(hFig)
     if ~isempty(imagePoints)
         % Plot the detected checkerboard corners
         plot(imagePoints(:, 1), imagePoints(:, 2), 'ro', 'MarkerSize', 5);
-        title('Detected Checkerboard Corners');
+        title('Navigate Towards the Middle');
         
         % Calculate the size of the checkerboard in pixels
         checkerboardWidthPixels = max(imagePoints(:, 1)) - min(imagePoints(:, 1));
@@ -53,6 +53,12 @@ while ishandle(hFig)
         % Draw an arrow from the average of matched points to the center
         quiver(avgX, avgY, centerX - avgX, centerY - avgY, 0, 'r', 'LineWidth', 2);
         
+        if abs(deltaX) < 20 && abs(deltaY) < 20
+            title('You are Awesome!');
+            message = 'You are awesome!';
+            tts(message);
+        end
+
         % Display the estimated distance, X, and Y positions
         text(20, 20, sprintf('Distance: %.2f arbitrary units', distance), 'Color', 'r', 'FontSize', 12);
         text(20, 50, sprintf('X: %.2f pixels, Y: %.2f pixels', deltaX, deltaY), 'Color', 'r', 'FontSize', 12);
