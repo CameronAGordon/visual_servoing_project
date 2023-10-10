@@ -16,7 +16,6 @@ classdef hamish_IBVS < handle
 
     methods       
         function self = hamish_IBVS
-            close all
             self.main;
         end
 
@@ -84,7 +83,6 @@ classdef hamish_IBVS < handle
 
         function main(self)
 %% Setting variables, initialising camera
-            close all
             initialX = 0;
             initialY = 0;
             initialZ = 0;
@@ -133,15 +131,15 @@ classdef hamish_IBVS < handle
                 disp(['Position: X=', num2str(currentX), ' cm, Y=', num2str(currentY), ', Z= ', num2str(currentZ)]);        % Display the average position
                 disp(['Depth (cm): ', num2str(-self.z_cm)]);                                                                % Display the depth in centimeters
   
-%% Display guidance arrow from avgPosition to original Position                
-                arrow = self.originalStart - self.avgPosition;                                                              % Calculate the arrow vector pointing towards the original start position
-                if ~any(isnan(self.avgPosition))
-                    img = insertShape(img, 'Line', [self.avgPosition(1), self.avgPosition(2), ...                           % Overlay the arrow on the image
-                        self.avgPosition(1) + arrow(1), self.avgPosition(2) + arrow(2)], ...
-                        'Color', 'red', 'LineWidth', 2);
+%% Display guidance arrow from avgPosition to original Position
+                imshow(img);                                                                                                % Display the image with detected checkerboard, arrow, and points
+                hold on
+                if ~any(isnan(self.avgPosition))                                                                            % Calculate the arrow vector pointing towards the original start position
+                    arrow = self.originalStart - self.avgPosition;
+                    quiver(self.avgPosition(1), self.avgPosition(2), arrow(1), arrow(2), 0, 'r', 'LineWidth', 2);
                 end
 
-                for i = 1 : length(self.points)                                                                         % Display detected points
+                for i = 1 : length(self.points)                                                                             % Display detected points
                     if mod(i,2) == 0
                         img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
                     else 
@@ -149,9 +147,13 @@ classdef hamish_IBVS < handle
                     end 
                 end
 
-                imshow(img);                                                                                            % Display the image with detected checkerboard, arrow, and points
-                pause(0.25)
+                pause(0.15)
             end
         end
     end
 end 
+
+%TO DO:
+% INCORPORATE A BLOCK THAT MEASURES THE ERROR AND WEHN THE X,Y AND Z VALUES GET CLOSE ENOUGH IT TURNS THE ARROW GREEN AND DSIPLAYS A "CAMERA LOCATED" TEXT
+% DISPLAY VALUES ON THE TOP LEFT CORNER (TURN GREEN WHEN ACCEPTABLE ERROR)
+% RECALIBRATE CAMERA FOR BETTER ACCURACY - REVISIT MATHS TO FINE TUNE
