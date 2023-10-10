@@ -31,34 +31,22 @@ y_cm_values = [];
 x_cm_values = [];
 prevZ = 0; 
 
+% Initialize arrays to store points in each quadrant
+topLeftPoints = [];
+topRightPoints = [];
+bottomLeftPoints = [];
+bottomRightPoints = [];
 
 % Main loop for visual servoing
-isCalibrationStarted = false;
 while ishandle(fig)
     % Capture a frame from the camera
     img = snapshot(vid);
 
     % Flip the image horizontally (ONLY NEEDED FOR FRONT FACING CAM)
     img = flip(img, 2);
-
+    
     % Convert the image to grayscale for checkerboard detection
     grayImg = rgb2gray(img);
-
-    % Check if calibration has started
-    if ~isCalibrationStarted
-        % Display "Press space to start" text
-        imshow(img);
-        text(20, 20, 'Press space to start', 'Color', 'red', 'FontSize', 16);
-        
-        % Wait for spacebar input to start calibration
-        k = waitforbuttonpress;
-        if k == 1 && strcmp(get(fig,'CurrentKey'), 'space')
-            % Reset original start position
-            originalStart = [];
-            isCalibrationStarted = true;
-        end
-        continue; % Skip the rest of the loop until calibration starts
-    end
     
     % Detect the checkerboard pattern and find its corners
     [imagePoints, boardSize] = detectCheckerboardPoints(grayImg);
@@ -115,6 +103,7 @@ while ishandle(fig)
         % Define the scalar factor t (you may need to adjust this, ADJUSTED TO COMPENSATE PHONE 6X6 CHECKERBOARD )
         t = 3;
         % Initialize an empty array to store the calculated z-values
+        z_values = [];
         z = 0;
         
         % Calculate z-values for each point
@@ -124,7 +113,10 @@ while ishandle(fig)
             
             % Calculate the z-value using the formula
             z = 1 / t * dot(r, a) + dot(s, b) + t * dot(c, [x; y]);
-
+            
+            % % Append the result to the z_values array
+            % z_values = [z_values; z];
+            
             % Calculate the change in X and Y positions in pixels
             deltaX = avgPosition(1) - originalStart(1);
             deltaY = avgPosition(2) - originalStart(2);
@@ -135,9 +127,8 @@ while ishandle(fig)
 
             % Convert the z-value to centimeters using the calibration data
             z_cm = (fx * fy) / deltaZ / 10; % Divide by 10 to convert from cm to cm
-            x_cm = (fx * deltaX) / fx / 10; % Convert pixel to cm for X-axis (assuming a square pixel)
-            y_cm = (fy * deltaY) / fy / 10; % Convert pixel to cm for Y-axis (assuming a square pixel)
-               
+            x_cm = (fx * deltaX * z_cm) / (fx * deltaZ);
+            y_cm = (fy * deltaY * z_cm) / (fy * deltaZ);
 
             % Append the result to the z_cm_values, x_cm_values, and y_cm_values arrays
             z_cm_values = [z_cm_values; z_cm];
@@ -147,7 +138,7 @@ while ishandle(fig)
 
         % Update the X and Y positions based on the changes
         currentX = initialX + x_cm;
-        currentY = initialY - y_cm;
+        currentY = initialY + y_cm;
         currentZ = initialZ + z_cm;
 
         % Display the average position
