@@ -7,16 +7,19 @@ classdef hamish_IBVS < handle
         acceptableError = 10;
         fig;
         avgPosition;
+        originalZ;
         z_cm_values;
         y_cm_values;
         x_cm_values;
-        x_cm; y_cm; z_cm;
-        z_values;                 % Initialize an empty array to store the calculated z-values
+        z_values;     
+        zfromStart_cm;
+        x_cm; y_cm; zCam_cm;
+                    
     end
 
     methods       
         function self = hamish_IBVS
-            self.main;
+            self.main;  
         end
 
         function zCalc(self)
@@ -33,7 +36,7 @@ classdef hamish_IBVS < handle
             
             r = [27.5, 0];        % Define the vectors (r, s) and (t, u) based on the checkerboard dimensions (THIS IS NO LONGER VALID WITH THE UPDATED CHECKERBOARD IM USING ON MY PHONE!)
             s = [0, 27.5];
-            t = 3;                % Define the scalar factor t (you may need to adjust this, ADJUSTED TO COMPENSATE PHONE 6X6 CHECKERBOARD )
+            t = 1.7;                % Define the scalar factor t (you may need to adjust this, (3.5 works for the phone,1.5 for the big board) )
 
             self.z_cm_values = [];                                
             self.x_cm_values = [];
@@ -41,6 +44,7 @@ classdef hamish_IBVS < handle
 
             a = self.points(1, :);                                                  % choosing a reference point
             prevZ = 0;
+
 %% Testing for 3 Points anywhere on checkerboard
             for i = 2:size(self.points, 1)                                          % Find two points (b and c) that form a triangle with the reference point
                 if ~isequal(self.points(i, :), a)
@@ -64,45 +68,48 @@ classdef hamish_IBVS < handle
                 x = self.points(i, 1);
                 y = self.points(i, 2);
                                                                                 
-                z = 1 / t * dot(r, a) + dot(s, b) + t * dot(c, [x; y]);    % Calculate the z-value using the formula
+                z = 1 / t * dot(r, a) + dot(s, b) + t * dot(c, [x; y]);         % Calculate the z-value using the formula
                 deltaX = self.avgPosition(1) - self.originalStart(1);           % Calculate the change in X and Y positions in pixels
                 deltaY = self.avgPosition(2) - self.originalStart(2);
-                deltaZ = z - prevZ;                                   % Calculate the change in Z from prevZ
-                prevZ = z;                                            % Update prevZ for the next iteration
+                deltaZ = z - prevZ;                                             % Calculate the change in Z from prevZ
+                prevZ = z;                                                      % Update prevZ for the next iteration
+                                                      
+                if isempty(self.z_cm_values)                                    % Update the originalZ property if it's the first iteration
+                    self.originalZ = z;
+                end
                 
+                zfromStart = z - self.originalZ;                                % Calculate the distance the camera has moved from its original position
                                                                                 % Convert the z-value to centimeters using the calibration data
-                self.z_cm = ((fx * fy) / deltaZ) / 10;                          % Divide by 10 to convert from cm to cm
+                self.zCam_cm = ((fx * fy) / deltaZ) / 10;                       % Divide by 10 to convert from cm to cm
+                self.zfromStart_cm = ((fx * fy) / zfromStart) / 10;             % Calculate the pixel measurement of the z value from the original position.
                 self.x_cm = ((fx * deltaX) / fx) / 10;                          % Convert pixel to cm for X-axis (assuming a square pixel)
                 self.y_cm = ((fy * deltaY) / fy) / 10;                          % Convert pixel to cm for Y-axis (assuming a square pixel)
         
-                self.z_cm_values = [self.z_cm_values; self.z_cm];
+                self.z_cm_values = [self.z_cm_values; self.zCam_cm];
                 self.x_cm_values = [self.x_cm_values; self.x_cm];
                 self.y_cm_values = [self.y_cm_values; self.y_cm];
             end
         end
-
+%% Main Function to run body of code
         function main(self)
-%% Setting variables, initialising camera
-            initialX = 0;
-            initialY = 0;
-            initialZ = 0;
                                                                                             % Define the acceptable error thresholds for X, Y, and Z
             acceptableErrorX = 3.0;                                                         % Adjust as needed
             acceptableErrorY = 3.0;                                                         % Adjust as needed
-            acceptableErrorZ = 30.0;                                                         % Adjust as needed
+            acceptableErrorZ = 30.0;                                                        % Adjust as needed
 
             vid = webcam("Surface Camera Front");                                           % Create a camera object using your laptop's front-facing camera
             self.fig = figure;                                                              % Create a figure for displaying the video feed and results
             set(self.fig, 'Name', 'Visual Servoing', 'NumberTitle', 'Off');
-            isCalibrationStarted = false;   
-%% Main while loop to run visual servoing
-            while ishandle(self.fig)
+            isCalibrationStarted = false;  
+
+    
+            while ishandle(self.fig)                                                        % Main while loop to run visual servoing
                 img = snapshot(vid);                                                        % Capture a frame from the camera
                 img = flip(img, 2);                                                         % Flip the image horizontally (ONLY NEEDED FOR FRONT FACING CAM)
                 grayImg = rgb2gray(img);                                                    % Convert the image to grayscale for checkerboard detection
 
-%% Checking if callibration has started to then wait for spacebar input                
-                if ~isCalibrationStarted                                                    % Check if calibration has started
+            
+                if ~isCalibrationStarted                                                    % Checking if callibration has started to then wait for spacebar input                                               
                     imshow(img);
                     text(20, 20, 'Press space to start', 'Color', 'red', 'FontSize', 16);   % Display "Press space to start" text
                     k = waitforbuttonpress;                                                 % Wait for spacebar input to start calibration
@@ -128,55 +135,51 @@ classdef hamish_IBVS < handle
                         end
                 end 
     
-                    self.zCalc
-                    currentX = initialX + self.x_cm;                                                                       % Update the X and Y positions based on the changes
-                    currentY = initialY - self.y_cm;
-                    currentZ = initialZ + self.z_cm;
-                                                                                            
-                    errorX = abs(currentX - initialX);                                                                     % Calculate the errors
-                    errorY = abs(currentY - initialY);
-                    errorZ = abs(currentZ - initialZ);
-                                               
-                    if errorX <= acceptableErrorX && errorY <= acceptableErrorY && errorZ <= acceptableErrorZ               % Check if the errors are within acceptable thresholds
-                        dispMessage = true;
-                        overlayColor = 'green';                                                                             % Change the arrow color to green
-                    else  
-                        overlayColor = 'red';                                                                                 % Arrow remains red
-                    end
-        
-                    disp(['Position: X=', num2str(currentX), ' cm, Y=', num2str(currentY), ', Z= ', num2str(currentZ)]);    % Display the average position
-                    disp(['Depth From Camera (cm): ', num2str(-self.z_cm)]);                                                % Display the depth in centimeters
+                self.zCalc                                            
+                errorX = abs(self.x_cm);                                                                               % Calculate the errors
+                errorY = abs(self.y_cm);
+                errorZ = abs(self.zCam_cm);
+
+                if errorX <= acceptableErrorX && errorY <= acceptableErrorY && errorZ <= acceptableErrorZ                  % Check if the errors are within acceptable thresholds
+                    dispMessage = true;
+                    overlayColor = 'green';                                                                                % Change the arrow color to green
+                else  
+                    overlayColor = 'red';                                                                                  % Arrow remains red
+                end
+    
+                disp(['Position: X=', num2str(self.x_cm), ' cm, Y=', num2str(-self.y_cm), ', Z= ', num2str(-self.zfromStart_cm)]);       % Display the average position
+                disp(['Depth From Camera (cm): ', num2str(self.zCam_cm)]);                                                             % Display the depth in centimeters
 
     %% Display guidance arrow from avgPosition to original Position
-                    imshow(img);                                                                                                            % Display the image with detected checkerboard, arrow, and points
-                    hold on
-                    if ~any(isnan(self.avgPosition))                                                                                        % Calculate the arrow vector pointing towards the original start position
-                        arrow = self.originalStart - self.avgPosition;
-                        quiver(self.avgPosition(1), self.avgPosition(2), arrow(1), arrow(2), 0, 'r', 'LineWidth', 2,'Color',overlayColor);  
-                    end
-                                                                                                                                            % Display the position information at the top left corner of the figure
-                    text(20, 20, sprintf('Depth (cm): %.2f arbitrary units', -currentZ), 'Color', overlayColor, 'FontSize', 12);
-                    text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm', currentX, currentY), 'Color', overlayColor, 'FontSize', 12);
+                imshow(img);                                                                                                            % Display the image with detected checkerboard, arrow, and points
+                hold on
+                if ~any(isnan(self.avgPosition))                                                                                        % Calculate the arrow vector pointing towards the original start position
+                    arrow = self.originalStart - self.avgPosition;
+                    quiver(self.avgPosition(1), self.avgPosition(2), arrow(1), arrow(2), 0, 'r', 'LineWidth', 2,'Color',overlayColor);  
+                end
+                                                                                                                                        % Display the position information at the top left corner of the figure
+                text(20, 20, sprintf('Depth (cm): %.2f ', self.zCam_cm), 'Color', overlayColor, 'FontSize', 12);
+                text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm, Z: %.2f cm', self.x_cm, -self.y_cm, -self.zfromStart_cm), 'Color', overlayColor, 'FontSize', 12);
 
-                    if dispMessage == true
-                        text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
-                    end
+                if dispMessage == true
+                    text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
+                end
 
-                    for i = 1 : length(self.points)                                                                                         % Display detected points
-                        if mod(i,2) == 0
-                            img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
-                        else 
-                           img = insertMarker(img, self.points(i,:), 'o', 'Color', 'red', 'Size', 5);   
-                        end 
-                    end
-                    
-                    hold off
-                    pause(0.25)
+                for i = 1 : length(self.points)                                                                                         % Display detected points
+                    if mod(i,2) == 0
+                        img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
+                    else 
+                       img = insertMarker(img, self.points(i,:), 'o', 'Color', 'red', 'Size', 5);   
+                    end 
+                end
+                
+                hold off
+                pause(0.05)
             end
         end
     end
 end 
 
 %TO DO:
-
 % RECALIBRATE CAMERA FOR BETTER ACCURACY - REVISIT MATHS TO FINE TUNE
+% FIX THE ZFROMSTART VALUE (IS NOT SHOWING THE DISTANCE OF THE PATTERN FROMTHE ORIGINAL POSITION BUT RATHER SOME RANDOM NUMBER) - PROBALY NEED TO TAKE THE SECTION THAT SETS THE ORIGINAL Z POSITION OUT OF THE FOR LOOP.
