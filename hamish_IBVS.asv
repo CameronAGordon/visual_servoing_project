@@ -116,8 +116,7 @@ classdef hamish_IBVS < handle
 %% Setting up checkerboard point detection, values display
                 [imagePoints, ~] = detectCheckerboardPoints(grayImg);                                                      % Detect the checkerboard pattern and find its corners
                 self.points = [];                                                                                          % Clear the points variable to prevent a buildup
-                dispMessage = false;
-                
+
                 if ~isempty(imagePoints)                                                                                   % Check for checkerboard recognition, process vertex points
                         self.points = [self.points; imagePoints];                                                          % Store the detected points
                         self.points = self.points(~any(isnan(self.points), 2), :);                                         % Filter out NaN values from points   
@@ -157,11 +156,9 @@ classdef hamish_IBVS < handle
                                                                                                                                             % Display the position information at the top left corner of the figure
                     text(20, 20, sprintf('Depth (cm): %.2f arbitrary units', -currentZ), 'Color', overlayColor, 'FontSize', 12);
                     text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm', currentX, currentY), 'Color', overlayColor, 'FontSize', 12);
-
                     if dispMessage == true
-                        text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
-                    end
-
+                        text(20, 40, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                       % Display "CAMERA LOCATED" text
+    
                     for i = 1 : length(self.points)                                                                                         % Display detected points
                         if mod(i,2) == 0
                             img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
@@ -178,5 +175,6 @@ classdef hamish_IBVS < handle
 end 
 
 %TO DO:
-
+% INCORPORATE A BLOCK THAT MEASURES THE ERROR AND WEHN THE X,Y AND Z VALUES GET CLOSE ENOUGH IT TURNS THE ARROW GREEN AND DSIPLAYS A "CAMERA LOCATED" TEXT
+% DISPLAY VALUES ON THE TOP LEFT CORNER (TURN GREEN WHEN ACCEPTABLE ERROR)
 % RECALIBRATE CAMERA FOR BETTER ACCURACY - REVISIT MATHS TO FINE TUNE
