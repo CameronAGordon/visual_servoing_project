@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 % Create a webcam object for your integrated webcam
+=======
+
+% Create a webcam object for the integrated webcam
+>>>>>>> Stashed changes
 vid = webcam("Integrated Camera");
 
 % Create a figure for displaying the live video
