@@ -1,12 +1,12 @@
 % Create a webcam object for your integrated webcam
-vid = webcam("Integrated Webcam");
+vid = webcam("Integrated Camera");
 
 % Create a figure for displaying the live video
 hFig = figure;
 set(hFig, 'Name', 'Live Pattern Detection', 'NumberTitle', 'off');
 
 % Load the PNG image as grayscale (if it's not already in grayscale)
-template_path = fullfile('Pattern Images', 'ARTag.png');
+template_path = fullfile('Pattern Images', 'Checkerboard.jpg');
 template_gray = imread(template_path);
 
 % Check if the template image is not in grayscale
@@ -74,3 +74,6 @@ end
 
 % Clean up and close the webcam object
 clear vid;
+%%
+cameraList = webcamlist;
+disp(cameraList);
