@@ -14,6 +14,9 @@ classdef hamish_IBVS < handle
         z_values;     
         zfromStart_cm;
         x_cm; y_cm; zCam_cm;
+        x_history = [];
+        y_history = [];
+        z_history = [];
                     
     end
 
@@ -85,11 +88,17 @@ classdef hamish_IBVS < handle
                 self.x_cm = ((fx * deltaX) / fx) / 10;                          % Convert pixel to cm for X-axis (assuming a square pixel)
                 self.y_cm = ((fy * deltaY) / fy) / 10;                          % Convert pixel to cm for Y-axis (assuming a square pixel)
         
+                self.x_history = [self.x_history; self.x_cm];
+                self.y_history = [self.y_history; self.y_cm];
+                self.z_history = [self.z_history; self.zCam_cm];
+
                 self.z_cm_values = [self.z_cm_values; self.zCam_cm];
                 self.x_cm_values = [self.x_cm_values; self.x_cm];
                 self.y_cm_values = [self.y_cm_values; self.y_cm];
             end
         end
+
+
 %% Main Function to run body of code
         function main(self)
                                                                                             % Define the acceptable error thresholds for X, Y, and Z
@@ -133,49 +142,89 @@ classdef hamish_IBVS < handle
                         if isempty(self.originalStart)                                                                     % if checkerboard is recognized, set point as the startPos and run calculations
                             self.originalStart = self.avgPosition;
                         end
-                end 
+                
     
-                self.zCalc                                            
-                errorX = abs(self.x_cm);                                                                               % Calculate the errors
-                errorY = abs(self.y_cm);
-                errorZ = abs(self.zCam_cm);
-
-                if errorX <= acceptableErrorX && errorY <= acceptableErrorY && errorZ <= acceptableErrorZ                  % Check if the errors are within acceptable thresholds
-                    dispMessage = true;
-                    overlayColor = 'green';                                                                                % Change the arrow color to green
-                else  
-                    overlayColor = 'red';                                                                                  % Arrow remains red
-                end
+                    self.zCalc                                            
+                    errorX = abs(self.x_cm);                                                                               % Calculate the errors
+                    errorY = abs(self.y_cm);
+                    errorZ = abs(self.zCam_cm);
     
-                disp(['Position: X=', num2str(self.x_cm), ' cm, Y=', num2str(-self.y_cm), ', Z= ', num2str(-self.zfromStart_cm)]);       % Display the average position
-                disp(['Depth From Camera (cm): ', num2str(self.zCam_cm)]);                                                             % Display the depth in centimeters
-
-    %% Display guidance arrow from avgPosition to original Position
-                imshow(img);                                                                                                            % Display the image with detected checkerboard, arrow, and points
-                hold on
-                if ~any(isnan(self.avgPosition))                                                                                        % Calculate the arrow vector pointing towards the original start position
-                    arrow = self.originalStart - self.avgPosition;
-                    quiver(self.avgPosition(1), self.avgPosition(2), arrow(1), arrow(2), 0, 'r', 'LineWidth', 2,'Color',overlayColor);  
-                end
-                                                                                                                                        % Display the position information at the top left corner of the figure
-                text(20, 20, sprintf('Depth (cm): %.2f ', self.zCam_cm), 'Color', overlayColor, 'FontSize', 12);
-                text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm, Z: %.2f cm', self.x_cm, -self.y_cm, -self.zfromStart_cm), 'Color', overlayColor, 'FontSize', 12);
-
-                if dispMessage == true
-                    text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
-                end
-
-                for i = 1 : length(self.points)                                                                                         % Display detected points
-                    if mod(i,2) == 0
-                        img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
-                    else 
-                       img = insertMarker(img, self.points(i,:), 'o', 'Color', 'red', 'Size', 5);   
-                    end 
+                    if errorX <= acceptableErrorX && errorY <= acceptableErrorY && errorZ <= acceptableErrorZ                  % Check if the errors are within acceptable thresholds
+                        dispMessage = true;
+                        overlayColor = 'green';                                                                                % Change the arrow color to green
+                    else  
+                        overlayColor = 'red';                                                                                  % Arrow remains red
+                    end
+        
+                    disp(['Position: X=', num2str(self.x_cm), ' cm, Y=', num2str(-self.y_cm), ', Z= ', num2str(-self.zfromStart_cm)]);       % Display the average position
+                    disp(['Depth From Camera (cm): ', num2str(self.zCam_cm)]);                                                             % Display the depth in centimeters
+    
+        %% Display guidance arrow from avgPosition to original Position
+                    imshow(img);                                                                                                            % Display the image with detected checkerboard, arrow, and points
+                    hold on
+                    if ~any(isnan(self.avgPosition))                                                                                        % Calculate the arrow vector pointing towards the original start position
+                        arrow = self.originalStart - self.avgPosition;
+                        quiver(self.avgPosition(1), self.avgPosition(2), arrow(1), arrow(2), 0, 'r', 'LineWidth', 2,'Color',overlayColor);  
+                    end
+                                                                                                                                            % Display the position information at the top left corner of the figure
+                    text(20, 20, sprintf('Depth (cm): %.2f ', self.zCam_cm), 'Color', overlayColor, 'FontSize', 12);
+                    text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm, Z: %.2f cm', self.x_cm, -self.y_cm, -self.zfromStart_cm), 'Color', overlayColor, 'FontSize', 12);
+    
+                    if dispMessage == true
+                        text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
+                    end
+    
+                    for i = 1 : length(self.points)                                                                                         % Display detected points
+                        if mod(i,2) == 0
+                            img = insertMarker(img, self.points(i,:), 'o', 'Color', 'green', 'Size', 5);
+                        else 
+                           img = insertMarker(img, self.points(i,:), 'o', 'Color', 'red', 'Size', 5);   
+                        end 
+                    end
+                else
+                    self.x_cm = 1000;
+                    self.y_cm = 1000;
+                    self.zCam_cm = 1000;
+                    self.x_history = [self.x_history; self.x_cm];
+                    self.y_history = [self.y_history; self.y_cm];
+                    self.z_history = [self.z_history; self.zCam_cm];
                 end
                 
                 hold off
-                pause(0.05)
+                pause(0.5)
             end
+        end
+        function generateGraphs(self)
+            % Create figures to display the historical x, y, and z values
+            figure;
+            plot(self.x_history);
+            title('X Values Over Time');
+            xlabel('Iteration');
+            ylabel('X (cm)');
+
+            figure;
+            plot(self.y_history);
+            title('Y Values Over Time');
+            xlabel('Iteration');
+            ylabel('Y (cm)');
+
+            figure;
+            plot(self.z_history);
+            title('Z Values Over Time');
+            xlabel('Iteration');
+            ylabel('Z (cm)');
+        end
+
+        function delete(self)
+            % Destructor method: called when the object is destroyed (e.g., when you type "end")
+
+            % Close the webcam figure
+            if ishandle(self.fig)
+                close(self.fig);
+            end
+
+            % Generate the graphs
+            self.generateGraphs();
         end
     end
 end 
