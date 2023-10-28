@@ -1,10 +1,6 @@
-<<<<<<< Updated upstream
-% Create a webcam object for your integrated webcam
-=======
-
 % Create a webcam object for the integrated webcam
 >>>>>>> Stashed changes
-vid = webcam("Integrated Camera");
+vid = webcam("Webcam");
 
 % Physical size of the squares on the checkerboard (in centimeters)
 squareSizeCM = 2.75;  % Each square is 2.75 cm by 2.75 cm
