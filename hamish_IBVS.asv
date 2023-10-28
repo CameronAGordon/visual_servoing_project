@@ -35,7 +35,7 @@ classdef hamish_IBVS < handle
             
             r = [27.5, 0];        % Define the vectors (r, s) and (t, u) based on the checkerboard dimensions (THIS IS NO LONGER VALID WITH THE UPDATED CHECKERBOARD IM USING ON MY PHONE!)
             s = [0, 27.5];
-            t = 3.5;              % Define the scalar factor t (you may need to adjust this, (3.5 works for the phone,1.7 for the big board) )
+            t = 1.7;              % Define the scalar factor t (you may need to adjust this, (3.5 works for the phone,1.5 for the big board) )
 
             self.z_cm_values = [];                                
             self.x_cm_values = [];
@@ -94,7 +94,7 @@ classdef hamish_IBVS < handle
             acceptableErrorY = 3.0;                                                         % Adjust as needed
             acceptableErrorZ = 30.0;                                                        % Adjust as needed
 
-            vid = webcam("Integrated Webcam");                                           % Create a camera object using your laptop's front-facing camera
+            vid = webcam("Surface Camera Front");                                           % Create a camera object using your laptop's front-facing camera
             self.fig = figure;                                                              % Create a figure for displaying the video feed and results
             set(self.fig, 'Name', 'Visual Servoing', 'NumberTitle', 'Off');
             isCalibrationStarted = false;  
@@ -156,7 +156,7 @@ classdef hamish_IBVS < handle
                 end
                                                                                                                                         % Display the position information at the top left corner of the figure
                 text(20, 20, sprintf('Depth (cm): %.2f ', self.zCam_cm), 'Color', overlayColor, 'FontSize', 12);
-                text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm', self.x_cm, -self.y_cm), 'Color', overlayColor, 'FontSize', 12);
+                text(20, 40, sprintf('X: %.2f cm, Y: %.2f cm, Z: %.2f cm', self.x_cm, -self.y_cm), 'Color', overlayColor, 'FontSize', 12);
 
                 if dispMessage == true
                     text(20, 65, 'CAMERA LOCATED', 'Color', 'green', 'FontSize', 16);                                                   % Display "CAMERA LOCATED" text
