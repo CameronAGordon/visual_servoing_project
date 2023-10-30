@@ -19,7 +19,7 @@ classdef hamish_IBVS < handle
 
     methods       
         function self = hamish_IBVS
-            self.GUI = finalapp;
+            % self.GUI = finalapp;
             self.main;           
         end
 
@@ -173,7 +173,9 @@ classdef hamish_IBVS < handle
                     end 
                 end
                
+                drawnow;
                 pause(0.05)
+
             end
         end
     end
