@@ -13,12 +13,14 @@ classdef hamish_IBVS < handle
         x_cm_values;
         z_values;     
         x_cm; y_cm; zCam_cm;
+        GUI;
                     
     end
 
     methods       
         function self = hamish_IBVS
-            self.main;  
+            self.GUI = finalapp;
+            self.main;           
         end
 
         function zCalc(self)
@@ -94,7 +96,8 @@ classdef hamish_IBVS < handle
             acceptableErrorY = 3.0;                                                         % Adjust as needed
             acceptableErrorZ = 30.0;                                                        % Adjust as needed
 
-            vid = webcam("Integrated Webcam");                                           % Create a camera object using your laptop's front-facing camera
+            % vid = webcam("Integrated Webcam");                                           % Create a camera object using your laptop's front-facing camera
+            vid = webcam("Surface Camera Front");
             self.fig = figure;                                                              % Create a figure for displaying the video feed and results
             set(self.fig, 'Name', 'Visual Servoing', 'NumberTitle', 'Off');
             isCalibrationStarted = false;  
