@@ -100,7 +100,8 @@ classdef hamish_IBVS < handle
             acceptableErrorX = 6.0;                                                         % Adjust as needed
             acceptableErrorY = 6.0;                                                         % Adjust as needed
             acceptableErrorZ = 30.0;                                                        % Adjust as needed
-% Create a camera object using Hamish's laptop's front-facing camera when needed
+
+            % vid = webcam("Integrated Webcam");                                           % Create a camera object using your laptop's front-facing camera
             vid = webcam("Integrated Camera"); %Using Sarah's laptop camera
             self.fig = figure;                                                              % Create a figure for displaying the video feed and results
             set(self.fig, 'Name', 'Visual Servoing', 'NumberTitle', 'Off');

@@ -1,4 +1,4 @@
-classdef hamish_IBVS < handle
+classdef hamish_IBVSSA < handle
 
     properties
         points;
@@ -18,7 +18,7 @@ classdef hamish_IBVS < handle
     end
 
     methods       
-        function self = hamish_IBVS
+        function self = hamish_IBVSSA
             self.main;  
         end
 
@@ -88,6 +88,15 @@ classdef hamish_IBVS < handle
                 self.z_cm_values = [self.z_cm_values; self.zCam_cm];
                 self.x_cm_values = [self.x_cm_values; self.x_cm];
                 self.y_cm_values = [self.y_cm_values; self.y_cm];
+
+                % Create a matrix to hold the x_cm and y_cm values
+                data = [self.x_cm, self.y_cm];
+                
+                % Define the CSV file path where you want to save the data
+                csvFilePath = 'C:\Users\sarah\OneDrive\Documents\2023 Spring\Sensors and Control for Mechatronic Systems\visual_servoing_project\SarahWorkingfolder\output_data.csv'; % Change this to your desired file path
+                
+                % Save the data to the CSV file
+                writematrix(data, csvFilePath);
             end
         end
 %% Main Function to run body of code
@@ -97,8 +106,8 @@ classdef hamish_IBVS < handle
             acceptableErrorY = 3.0;                                                         % Adjust as needed
             acceptableErrorZ = 30.0;                                                        % Adjust as needed
 
-            vid = webcam("Surface Camera Front");                                           % Create a camera object using your laptop's front-facing camera
-            %vid = webcam("Integrated Webcam");                                             %Cameron Webcam
+            %vid = webcam("Surface Camera Front");                                           % Create a camera object using your laptop's front-facing camera
+            vid = webcam("Integrated Webcam");                                             %Cameron Webcam
             %vid = webcam("Surface Camera Front");                                          %Sarah Webcam
             self.fig = figure;                                                              % Create a figure for displaying the video feed and results
             set(self.fig, 'Name', 'Visual Servoing', 'NumberTitle', 'Off');
