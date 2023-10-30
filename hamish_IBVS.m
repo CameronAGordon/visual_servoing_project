@@ -105,7 +105,7 @@ classdef hamish_IBVS < handle
                 img = flip(img, 2);                                                         % Flip the image horizontally (ONLY NEEDED FOR FRONT FACING CAM)
                 grayImg = rgb2gray(img);                                                    % Convert the image to grayscale for checkerboard detection
 
-            
+                    
                 if ~isCalibrationStarted                                                    % Checking if callibration has started to then wait for spacebar input                                               
                     imshow(img);
                     text(20, 20, 'Press space to start', 'Color', 'red', 'FontSize', 16);   % Display "Press space to start" text
