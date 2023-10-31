@@ -19,3 +19,4 @@ This code is a MATLAB app that implements image-based visual servoing (IBVS) for
 - It defines several methods that handle the app events, such as starting, stopping, and simulating the IBVS algorithm. It also defines some helper methods that perform the calculations and display the results.
 - It uses a method named `zCalc` that calculates the depth of the target object using camera calibration data and three non-collinear points on the checkerboard pattern. It also converts the pixel coordinates to centimeters using the focal length and the depth value.
 - It uses a loop to iterate over all the image points and store their x, y, and z values in centimeters in arrays.
+
